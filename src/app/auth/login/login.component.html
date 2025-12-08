@@ -1,0 +1,121 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    <!-- Promotional Side -->
+    <div class="side-panel side-panel--promo">
+      <div class="promo-background"></div>
+      <div class="promo-content">
+        <div class="promo-logo-circle">
+          <img src="assets/eco-icon.png" alt="Ruta Verde Logo" class="promo-logo-img" />
+        </div>
+        
+        <h2 class="promo-title">Bienvenido</h2>
+        <p class="promo-subtitle">Inicia sesión en tu cuenta para explorar nuestras rutas ecológicas</p>
+        <div class="promo-cta">
+          <button class="cta-button" routerLink="/auth/register">¿No tienes cuenta? Regístrate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Side -->
+    <div class="side-panel side-panel--form">
+      <div class="login-card" [@fadeSlideInOut]>
+        <div class="form-header">
+          <div class="header-content">
+            <div class="eco-avatar small">
+              <img src="assets/eco-icon.png" alt="Ruta Verde" class="eco-avatar-img" />
+            </div>
+            <div class="header-text">
+              <h1 class="form-brand">Ruta Verde</h1>
+              <p class="form-tagline">Rutas ecológicas y sostenibles</p>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="form-title">Inicia sesión</h2>
+
+        <section class="form-box">
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="on" class="login-custom-form">
+            <div class="custom-field">
+              <label>Email</label>
+              <div class="input-wrap">
+                <span class="input-icon">✉️</span>
+                <input 
+                  type="email" 
+                  formControlName="email" 
+                  autocomplete="email" 
+                  placeholder="tu@email.com"
+                  aria-label="Correo electrónico" 
+                  title="Correo electrónico" 
+                />
+              </div>
+              @if (loginForm.controls.email.errors?.['required'] && loginForm.controls.email.touched) {
+                <div class="field-error">El email es requerido</div>
+              }
+              @if (loginForm.controls.email.errors?.['email'] && loginForm.controls.email.touched) {
+                <div class="field-error">Ingresa un email válido</div>
+              }
+            </div>
+
+            <div class="custom-field">
+              <label>Contraseña</label>
+              <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input 
+                  [type]="showPassword() ? 'text' : 'password'" 
+                  formControlName="password" 
+                  autocomplete="current-password" 
+                  placeholder="Mínimo 6 caracteres"
+                  aria-label="Contraseña" 
+                  title="Contraseña" 
+                />
+                <button 
+                  type="button" 
+                  class="icon-btn toggle-password"
+                  (click)="togglePassword()" 
+                  [attr.aria-pressed]="showPassword()"
+                  title="{{ showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña' }}"
+                >
+                  <span>{{ showPassword() ? '👁️‍🗨️' : '👁️' }}</span>
+                </button>
+              </div>
+              @if (loginForm.controls.password.errors?.['required'] && loginForm.controls.password.touched) {
+                <div class="field-error">La contraseña es requerida</div>
+              }
+              @if (loginForm.controls.password.errors?.['minlength'] && loginForm.controls.password.touched) {
+                <div class="field-error">Mínimo 6 caracteres</div>
+              }
+            </div>
+
+            <div class="custom-row">
+              <div class="custom-remember">
+                <input type="checkbox" formControlName="remember" id="rememberCheck" />
+                <label for="rememberCheck">Recuérdame</label>
+              </div>
+              <div class="custom-forgot">
+                <a routerLink="/auth/forgot" class="forgot-link">¿Olvidaste tu contraseña?</a>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-submit" [disabled]="loading()">
+              @if (loading()) {
+                <span class="btn-spinner"></span>
+                <span>Iniciando sesión...</span>
+              } @else {
+                <span class="btn-icon">🔐</span>
+                <span>INICIA SESIÓN</span>
+              }
+            </button>
+          </form>
+
+          @if (error()) {
+            <div class="error-box">
+              <span class="error-icon">⚠️</span>
+              <span class="error-text">{{ error() }}</span>
+            </div>
+          }
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+

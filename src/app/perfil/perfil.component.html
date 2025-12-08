@@ -1,0 +1,169 @@
+<div class="perfil-wrapper">
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <h1 class="brand-text">EcoRutas</h1>
+      </div>
+      <div class="nav-actions">
+        <a routerLink="/dashboard" class="nav-btn nav-back" title="Volver al dashboard">
+          <span class="nav-icon">←</span>
+          <span class="nav-text">Dashboard</span>
+        </a>
+        <button class="nav-btn nav-logout" (click)="logout()" title="Cerrar sesión">
+          <span class="nav-icon">⏻</span>
+          <span class="nav-text">Salir</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="perfil-main">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div>
+          <h2 class="page-title">Mi Perfil</h2>
+          <p class="page-subtitle">Administra tu información personal</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avatar Card -->
+    <div class="avatar-card">
+      <div class="avatar-container">
+        <div class="avatar-display">
+          @if (avatar()) {
+            <img src="{{ avatar() }}" alt="Avatar" class="avatar-image" />
+          } @else {
+            <div class="avatar-placeholder">{{ userEmail().charAt(0).toUpperCase() }}</div>
+          }
+        </div>
+        <div class="avatar-info">
+          <h3 class="user-name">{{ userEmail().split('@')[0] }}</h3>
+          <p class="user-email">{{ userEmail() }}</p>
+        </div>
+      </div>
+      <label class="btn btn-secondary">
+        <span class="btn-icon">📷</span>
+        Cambiar foto
+        <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
+      </label>
+    </div>
+
+    <!-- Messages -->
+    @if (message()) {
+      <div class="alert" [class.alert-success]="message()!.type === 'success'" [class.alert-error]="message()!.type === 'error'">
+        <span class="alert-icon">{{ message()!.type === 'success' ? '✓' : '⚠' }}</span>
+        <span class="alert-text">{{ message()!.text }}</span>
+      </div>
+    }
+
+    <!-- Form -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-wrapper">
+      <!-- Personal Information Section -->
+      <section class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">📋 Información Personal</h3>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label class="field-label">Correo Electrónico</label>
+            <input type="text" class="field-input" [value]="userEmail()" disabled />
+            <span class="field-hint">No se puede modificar</span>
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Nombre de Usuario *</label>
+            <input type="text" class="field-input" formControlName="username" placeholder="tu_usuario" />
+            @if (form.get('username')?.invalid && form.get('username')?.touched) {
+              <span class="field-error">Mínimo 3 caracteres</span>
+            }
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Nombre Completo</label>
+            <input type="text" class="field-input" formControlName="fullName" placeholder="Juan Pérez García" />
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Teléfono</label>
+            <input type="tel" class="field-input" formControlName="phone" placeholder="+57 300 123 4567" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Address Section -->
+      <section class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">📍 Dirección de Recolección</h3>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-field full-width">
+            <label class="field-label">Dirección</label>
+            <input type="text" class="field-input" formControlName="address" placeholder="Calle 10 # 20-30" />
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Barrio</label>
+            <input type="text" class="field-input" formControlName="neighborhood" placeholder="Centro" />
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Latitud</label>
+            <input type="number" class="field-input" formControlName="lat" step="0.000001" placeholder="3.882" />
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">Longitud</label>
+            <input type="number" class="field-input" formControlName="lng" step="0.000001" placeholder="-77.031" />
+          </div>
+
+          <div class="form-field full-width">
+            <button type="button" class="btn btn-secondary" (click)="getCurrentLocation()" [disabled]="loading()">
+              @if (loading()) {
+                <span class="spinner-small"></span>
+                Obteniendo ubicación...
+              } @else {
+                📍 Usar mi ubicación actual
+              }
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notifications Section -->
+      <section class="form-section">
+        <div class="section-header">
+          <h3 class="section-title">🔔 Notificaciones</h3>
+        </div>
+
+        <div class="form-grid">
+          <div class="checkbox-field">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="notifyEmail" />
+              <span>Recibir notificaciones por correo</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action Buttons -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading() || !form.valid">
+          @if (loading()) {
+            <span class="spinner-small"></span>
+            Guardando...
+          } @else {
+            ✓ Guardar Cambios
+          }
+        </button>
+      </div>
+    </form>
+  </main>
+</div>

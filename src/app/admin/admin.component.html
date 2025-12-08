@@ -1,0 +1,35 @@
+<div class="admin-shell">
+  <!-- Admin Navigation -->
+  <nav class="admin-nav">
+    <div class="nav-brand">
+      <h1 class="brand">🏢 Panel Admin</h1>
+    </div>
+    <div class="nav-menu">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a routerLink="/mapa" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">Mapa</span>
+      </a>
+      <a routerLink="/admin/vehiculos" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🚛</span>
+        <span class="nav-label">Vehículos</span>
+      </a>
+      <a routerLink="/admin/rutas" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🛣️</span>
+        <span class="nav-label">Rutas</span>
+      </a>
+      <a routerLink="/admin/calles" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">🛑</span>
+        <span class="nav-label">Calles</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Admin Content -->
+  <main class="admin-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

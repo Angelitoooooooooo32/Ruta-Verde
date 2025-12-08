@@ -1,0 +1,681 @@
+// ===================================
+// MAPA COMPONENT - MODERN DESIGN
+// ===================================
+
+// Color Scheme
+$primary: #10b981;
+$primary-dark: #059669;
+$primary-light: #d1fae5;
+$secondary: #3b82f6;
+$success: #10b981;
+$danger: #ef4444;
+$danger-dark: #dc2626;
+$warning: #f59e0b;
+$neutral: #6b7280;
+$light: #f9fafb;
+$dark: #111827;
+
+// Layout
+.map-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #f3f4f6;
+}
+
+// ===================================
+// SIDEBAR STYLING
+// ===================================
+
+.sidebar-map {
+  width: 340px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+  border-right: 1.5px solid #e5e7eb;
+  padding: 16px 12px 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100vh;
+  flex-shrink: 0;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  /* Scrollbar styling */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+
+    &:hover {
+      background: #9ca3af;
+    }
+  }
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+// Back Button
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  color: $dark;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  text-decoration: none;
+
+  .back-icon {
+    font-size: 18px;
+    font-weight: 700;
+    color: $secondary;
+  }
+
+  .back-text {
+    color: $dark;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #f3f4f6 0%, #efefef 100%);
+    border-color: $secondary;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $secondary;
+    outline-offset: 2px;
+  }
+}
+
+// ===================================
+// SECTION STYLING
+// ===================================
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 8px;
+
+  &:not(:last-child) {
+    border-bottom: 1.5px solid #e5e7eb;
+    padding-bottom: 14px;
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: $dark;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba($secondary, 0.1);
+  color: $secondary;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+// ===================================
+// LIST ITEMS STYLING
+// ===================================
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  color: $dark;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+
+  .item-indicator,
+  .item-icon {
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+
+  .item-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.15);
+
+    &.route {
+      background: $secondary;
+      box-shadow: 0 0 0 3px rgba($secondary, 0.15);
+    }
+  }
+
+  .item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .item-name {
+    font-weight: 600;
+    color: $dark;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .item-meta {
+    font-size: 12px;
+    color: #9ca3af;
+  }
+
+  .item-arrow {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: $secondary;
+    font-weight: 700;
+    opacity: 0.6;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-color: $secondary;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateX(2px);
+
+    .item-arrow {
+      opacity: 1;
+      transform: translateX(2px);
+    }
+  }
+
+  &.selected {
+    background: linear-gradient(135deg, rgba($primary, 0.08) 0%, rgba($primary, 0.04) 100%);
+    border-color: $primary;
+    color: $primary;
+    box-shadow: 0 0 0 1px rgba($primary, 0.2);
+
+    .item-name {
+      color: $primary;
+      font-weight: 700;
+    }
+
+    .item-indicator {
+      background: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.25);
+      animation: pulse-indicator 2s ease-in-out infinite;
+    }
+
+    .item-arrow {
+      color: $primary;
+      opacity: 1;
+    }
+  }
+
+  &.vehicle-item {
+    .item-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba($primary, 0.1);
+      color: $primary;
+    }
+  }
+}
+
+@keyframes pulse-indicator {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba($primary, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba($primary, 0.08);
+  }
+}
+
+// ===================================
+// EMPTY & LOADING STATES
+// ===================================
+
+.empty-state {
+  padding: 20px 12px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 12px;
+
+  p {
+    margin: 0;
+    color: #9ca3af;
+    font-size: 13px;
+  }
+}
+
+.error-state {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba($danger, 0.08);
+  border: 1.5px solid rgba($danger, 0.3);
+  color: $danger;
+  font-size: 13px;
+
+  .error-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+// ===================================
+// CONTROLS SECTION
+// ===================================
+
+.controls-section {
+  margin-top: auto;
+  border-top: 1.5px solid #e5e7eb;
+  padding-top: 14px;
+}
+
+.controls-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  white-space: nowrap;
+
+  .btn-icon {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .btn-text {
+    font-weight: 700;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid;
+    outline-offset: 2px;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  color: #ffffff;
+  border-color: $primary-dark;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #17c964 0%, #079969 100%);
+  }
+
+  &:focus-visible {
+    outline-color: $primary;
+  }
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, $danger 0%, $danger-dark 100%);
+  color: #ffffff;
+  border-color: $danger-dark;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+  }
+
+  &:focus-visible {
+    outline-color: $danger;
+  }
+}
+
+// ===================================
+// STATUS BOX
+// ===================================
+
+.status-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba($primary, 0.08) 0%, rgba($primary, 0.04) 100%);
+  border: 1.5px solid $primary;
+  margin-top: 8px;
+
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $primary;
+    flex-shrink: 0;
+
+    &.live {
+      animation: live-pulse 2s ease-in-out infinite;
+    }
+  }
+
+  .status-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .status-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: $primary;
+    letter-spacing: 0.5px;
+  }
+
+  .status-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: $dark;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+// ===================================
+// MAP CONTAINER
+// ===================================
+
+.map-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.map {
+  height: 100%;
+  width: 100%;
+
+  /* Leaflet controls styling */
+  :global(.leaflet-top),
+  :global(.leaflet-bottom) {
+    margin: 12px;
+  }
+
+  :global(.leaflet-control) {
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  :global(.leaflet-control-zoom a) {
+    width: 40px;
+    height: 40px;
+    line-height: 38px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: $dark;
+    border: 1.5px solid #e5e7eb;
+    font-weight: 700;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f3f4f6;
+      border-color: $secondary;
+      color: $secondary;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+
+  :global(.leaflet-draw-toolbar a) {
+    width: 40px;
+    height: 40px;
+    line-height: 38px;
+    border-radius: 10px;
+    background: #ffffff;
+    border: 1.5px solid #e5e7eb;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #f3f4f6;
+      border-color: $secondary;
+    }
+  }
+
+  :global(.leaflet-draw-actions) {
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+
+    li a {
+      background: $dark;
+      color: #ffffff;
+      border: none;
+      padding: 8px 12px;
+      font-weight: 600;
+
+      &:hover {
+        background: #1f2937;
+      }
+    }
+  }
+}
+
+// ===================================
+// RESPONSIVENESS
+// ===================================
+
+@media (max-width: 1024px) {
+  .sidebar-map {
+    width: 300px;
+    padding: 12px 10px;
+  }
+
+  .list-item {
+    padding: 9px 10px;
+    font-size: 13px;
+
+    .item-icon {
+      font-size: 13px;
+    }
+  }
+
+  .section-title {
+    font-size: 12px;
+  }
+
+  .btn {
+    padding: 10px 12px;
+    min-height: 40px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .map-layout {
+    flex-direction: column-reverse;
+  }
+
+  .sidebar-map {
+    width: 100%;
+    max-height: 40vh;
+    border-right: none;
+    border-top: 1.5px solid #e5e7eb;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .sidebar-content {
+    max-height: 35vh;
+    overflow-y: auto;
+  }
+
+  .back-btn {
+    display: none;
+  }
+
+  .map-container {
+    height: 60vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar-map {
+    max-height: 50vh;
+    padding: 12px 10px;
+  }
+
+  .section {
+    gap: 8px;
+  }
+
+  .section-title {
+    font-size: 11px;
+  }
+
+  .list-item {
+    padding: 8px 10px;
+    font-size: 12px;
+    gap: 8px;
+
+    .item-arrow {
+      display: none;
+    }
+  }
+
+  .btn {
+    padding: 10px;
+    min-height: 38px;
+    font-size: 12px;
+
+    .btn-text {
+      display: none;
+    }
+
+    .btn-icon {
+      font-size: 18px;
+    }
+  }
+
+  .map-container {
+    height: 50vh;
+  }
+}
+

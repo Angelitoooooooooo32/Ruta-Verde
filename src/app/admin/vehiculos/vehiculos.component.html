@@ -1,0 +1,85 @@
+<div class="vehiculos-page">
+  <h2 class="page-title">Vehículos</h2>
+
+  <section class="form-section">
+    <details class="collapsible">
+      <summary>
+        <span class="section-title">Formulario de Creación de Vehículo</span>
+        <span class="caret" aria-hidden>▾</span>
+      </summary>
+      <form class="card" [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-grid">
+          <label class="field">
+            <span class="label">Placa</span>
+            <input class="input" type="text" formControlName="placa" placeholder="ABC123">
+          </label>
+          <label class="field">
+            <span class="label">Marca</span>
+            <input class="input" type="text" formControlName="marca" placeholder="Toyota">
+          </label>
+          <label class="field">
+            <span class="label">Modelo</span>
+            <input class="input" type="text" formControlName="modelo" placeholder="Hilux">
+          </label>
+          <label class="switch">
+            <input type="checkbox" formControlName="activo">
+            <span class="slider"></span>
+            <span class="switch-label">Activo</span>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" [disabled]="loading() || form.invalid">
+            @if (loading()) { Guardando... } @else { Guardar }
+          </button>
+          <button class="btn btn-ghost" type="button" (click)="newVehiculo()">Nuevo</button>
+        </div>
+        @if (error()) { <div class="alert error">{{ error() }}</div> }
+        @if (success()) { <div class="alert ok">{{ success() }}</div> }
+      </form>
+    </details>
+  </section>
+
+  <section class="list-section">
+    <details class="collapsible">
+      <summary>
+        <span class="section-title">Listado de Vehículos</span>
+        <span class="count">{{ vehiculos().length }}</span>
+        <span class="caret" aria-hidden>▾</span>
+      </summary>
+      @if (listLoading()) {
+      <div class="loading">Cargando...</div>
+      } @else {
+      <div class="list">
+        @for (v of pagedVehiculos(); track v.id) {
+        <div class="item card">
+          <div class="item-row">
+            <div class="item-main">
+              <div class="item-title">{{ v.placa }}</div>
+              <div class="item-sub">Marca: {{ v.marca || '—' }} • Modelo: {{ v.modelo || '—' }}</div>
+            </div>
+            <div class="item-status">{{ v.activo === false ? 'Inactivo' : 'Activo' }}</div>
+            <div class="item-actions">
+              <button class="icon-btn" title="Editar" (click)="editVehiculo(v)">✏️</button>
+              <button class="icon-btn danger" title="Eliminar" (click)="deleteVehiculo(v.id)">🗑️</button>
+            </div>
+          </div>
+        </div>
+        }
+        @if (vehiculos().length === 0) {
+        <div class="empty">Sin vehículos</div>
+        }
+      </div>
+      <div class="pagination">
+        <button class="btn btn-ghost" (click)="prevPage()" [disabled]="page() === 1">« Anterior</button>
+        <div class="pages">
+          @for (p of pagesWindow(); track p) {
+          <button class="page-btn" [class.active]="p === page()" (click)="gotoPage(p)">{{ p }}</button>
+          }
+        </div>
+        <button class="btn btn-ghost" (click)="nextPage()" [disabled]="page() === totalPages()">Siguiente »</button>
+        <div class="page-text">Pag {{ page() }} de {{ totalPages() }}</div>
+      </div>
+      }
+    </details>
+  </section>
+</div>

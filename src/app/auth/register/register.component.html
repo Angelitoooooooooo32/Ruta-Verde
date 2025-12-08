@@ -1,0 +1,191 @@
+<div class="register-container">
+  <div class="register-wrapper">
+    <!-- Promotional Side -->
+    <div class="side-panel side-panel--promo">
+      <div class="promo-background"></div>
+      <div class="promo-content">
+        <div class="promo-logo-circle">
+          <img src="assets/eco-icon.png" alt="Ruta Verde Logo" class="promo-logo-img" />
+        </div>
+        
+        <h2 class="promo-title">¡Únete a Ruta Verde!</h2>
+        <p class="promo-subtitle">Sé parte de una comunidad comprometida con el ambiente</p>
+        <div class="promo-benefits">
+          <div class="benefit">
+            <span class="benefit-icon">🌱</span>
+            <span>Rutas ecológicas</span>
+          </div>
+          <div class="benefit">
+            <span class="benefit-icon">♻️</span>
+            <span>Sostenibilidad</span>
+          </div>
+          <div class="benefit">
+            <span class="benefit-icon">👥</span>
+            <span>Comunidad activa</span>
+          </div>
+        </div>
+        <div class="promo-cta">
+          <p class="promo-login-text">¿Ya tienes cuenta?</p>
+          <a routerLink="/auth/login" class="cta-button">INICIA SESIÓN</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Side -->
+    <div class="side-panel side-panel--form">
+      <div class="register-card" [@fadeSlideInOut]>
+        <div class="form-header">
+          <div class="header-content">
+            <div class="eco-avatar small">
+              <img src="assets/eco-icon.png" alt="Ruta Verde" class="eco-avatar-img" />
+            </div>
+            <div class="header-text">
+              <h1 class="form-brand">Ruta Verde</h1>
+              <p class="form-tagline">Crear nueva cuenta</p>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="form-title">Regístrate Ahora</h2>
+
+        <section class="form-box">
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" autocomplete="on" class="register-custom-form">
+            <!-- Name Field -->
+            <div class="custom-field">
+              <label>Nombre de Usuario</label>
+              <div class="input-wrap">
+                <span class="input-icon">👤</span>
+                <input 
+                  type="text" 
+                  formControlName="name" 
+                  autocomplete="username"
+                  placeholder="tu_nombre"
+                  aria-label="Nombre de usuario" 
+                  title="Nombre de usuario" 
+                />
+              </div>
+              @if (registerForm.controls.name.errors?.['required'] && registerForm.controls.name.touched) {
+                <div class="field-error">El nombre de usuario es requerido</div>
+              }
+              @if (registerForm.controls.name.errors?.['minlength'] && registerForm.controls.name.touched) {
+                <div class="field-error">Mínimo 3 caracteres</div>
+              }
+            </div>
+
+            <!-- Email Field -->
+            <div class="custom-field">
+              <label>Email</label>
+              <div class="input-wrap">
+                <span class="input-icon">✉️</span>
+                <input 
+                  type="email" 
+                  formControlName="email" 
+                  autocomplete="email"
+                  placeholder="tu@email.com"
+                  aria-label="Correo electrónico" 
+                  title="Correo electrónico" 
+                />
+              </div>
+              @if (registerForm.controls.email.errors?.['required'] && registerForm.controls.email.touched) {
+                <div class="field-error">El email es requerido</div>
+              }
+              @if (registerForm.controls.email.errors?.['email'] && registerForm.controls.email.touched) {
+                <div class="field-error">Ingresa un email válido</div>
+              }
+            </div>
+
+            <!-- Password Field -->
+            <div class="custom-field">
+              <label>Contraseña</label>
+              <div class="input-wrap">
+                <span class="input-icon">🔒</span>
+                <input 
+                  [type]="showPassword() ? 'text' : 'password'" 
+                  formControlName="password" 
+                  autocomplete="new-password"
+                  placeholder="Mínimo 6 caracteres"
+                  aria-label="Contraseña" 
+                  title="Contraseña" 
+                />
+                <button 
+                  type="button" 
+                  class="icon-btn toggle-password"
+                  (click)="togglePassword()" 
+                  [attr.aria-pressed]="showPassword()"
+                  title="{{ showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña' }}"
+                >
+                  <span>{{ showPassword() ? '👁️‍🗨️' : '👁️' }}</span>
+                </button>
+              </div>
+              @if (registerForm.controls.password.errors?.['required'] && registerForm.controls.password.touched) {
+                <div class="field-error">La contraseña es requerida</div>
+              }
+              @if (registerForm.controls.password.errors?.['minlength'] && registerForm.controls.password.touched) {
+                <div class="field-error">Mínimo 6 caracteres</div>
+              }
+
+              <!-- Password Strength Indicator -->
+              @if (registerForm.controls.password.value) {
+                <div class="strength">
+                  <div class="strength-fill"
+                    [style.width.%]="passwordStrength()"
+                    [class.weak]="passwordStrength() < 40"
+                    [class.medium]="passwordStrength() >= 40 && passwordStrength() < 70"
+                    [class.strong]="passwordStrength() >= 70"
+                  ></div>
+                  <span class="strength-text">
+                    @if (passwordStrength() < 40) { Débil 📉 }
+                    @else if (passwordStrength() < 70) { Media 📊 }
+                    @else { Fuerte 📈 }
+                  </span>
+                </div>
+              }
+            </div>
+
+            <!-- Role Field -->
+            <div class="custom-field">
+              <label>Tipo de Cuenta</label>
+              <div class="input-wrap select-wrap">
+                <span class="input-icon">👥</span>
+                <select formControlName="role">
+                  <option value="cliente">Cliente (Recolector)</option>
+                  <option value="conductor">Conductor</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Terms Checkbox -->
+            <div class="custom-field checkbox-field">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="terms" />
+                <span>Acepto los <a href="#" class="link">términos y condiciones</a></span>
+              </label>
+              @if (registerForm.controls.terms.errors?.['required'] && registerForm.controls.terms.touched) {
+                <div class="field-error">Debes aceptar los términos</div>
+              }
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-submit" [disabled]="loading() || registerForm.invalid">
+              @if (loading()) {
+                <span class="btn-spinner"></span>
+                <span>Creando cuenta...</span>
+              } @else {
+                <span class="btn-icon">✨</span>
+                <span>CREAR CUENTA</span>
+              }
+            </button>
+          </form>
+
+          <!-- Error Message -->
+          @if (error()) {
+            <div class="error-box">
+              <span class="error-icon">⚠️</span>
+              <span class="error-text">{{ error() }}</span>
+            </div>
+          }
+        </section>
+      </div>
+    </div>
+  </div>
+</div>

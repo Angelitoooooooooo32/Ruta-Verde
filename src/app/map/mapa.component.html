@@ -1,0 +1,119 @@
+<div class="map-layout">
+  <!-- Sidebar izquierdo mejorado -->
+  <aside class="sidebar-map">
+    <!-- Back button mejorado -->
+    <button class="back-btn" routerLink="/dashboard" aria-label="Volver al dashboard" title="Volver">
+      <span class="back-icon">←</span>
+      <span class="back-text">Volver</span>
+    </button>
+
+    <div class="sidebar-content">
+      <!-- Sección de Rutas -->
+      <div class="section">
+        <div class="section-header">
+          <h3 class="section-title">Rutas disponibles</h3>
+          <span class="section-badge">{{ rutas().length }}</span>
+        </div>
+        
+        @if (loading()) {
+          <div class="loading-state">
+            <div class="spinner-small"></div>
+            <p>Cargando rutas...</p>
+          </div>
+        } @else if (error()) {
+          <div class="error-state">
+            <span class="error-icon">⚠️</span>
+            <p>{{ error() }}</p>
+          </div>
+        } @else {
+          <div class="items-list">
+            @for (r of rutas(); track r.id) {
+              <div class="list-item" 
+                   [class.selected]="selectedRutaId() === r.id"
+                   (click)="selectRuta(r.id)"
+                   title="Seleccionar ruta">
+                <span class="item-indicator route"></span>
+                <div class="item-content">
+                  <span class="item-name">{{ r.nombre }}</span>
+                  <span class="item-meta">Ruta disponible</span>
+                </div>
+                <span class="item-arrow">›</span>
+              </div>
+            }
+            @if (rutas().length === 0) {
+              <div class="empty-state">Sin rutas disponibles</div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Sección de Vehículos -->
+      <div class="section" appConductorOnly>
+        <div class="section-header">
+          <h3 class="section-title">Vehículos</h3>
+          <span class="section-badge">{{ vehiculos().length }}</span>
+        </div>
+        
+        @if (loading()) {
+          <div class="loading-state">
+            <div class="spinner-small"></div>
+            <p>Cargando vehículos...</p>
+          </div>
+        } @else {
+          <div class="items-list">
+            @for (v of vehiculos(); track v.id) {
+              <div class="list-item vehicle-item"
+                   [class.selected]="selectedVehiculoId() === v.id"
+                   (click)="selectVehiculo(v.id)"
+                   title="Seleccionar vehículo">
+                <span class="item-icon">🚛</span>
+                <div class="item-content">
+                  <span class="item-name">{{ v.placa || v.id }}</span>
+                  <span class="item-meta">Disponible</span>
+                </div>
+                <span class="item-arrow">›</span>
+              </div>
+            }
+            @if (vehiculos().length === 0) {
+              <div class="empty-state">Sin vehículos</div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Controles de conductor -->
+      <div class="section controls-section" appConductorOnly>
+        <div class="controls-group">
+          <button class="btn btn-primary" 
+                  (click)="iniciarRecorrido()"
+                  [disabled]="!selectedRutaId() || !selectedVehiculoId() || !!currentRecorridoId() || isStarting()">
+            <span class="btn-icon">▶</span>
+            <span class="btn-text">Iniciar Recorrido</span>
+          </button>
+          
+          <button class="btn btn-danger" 
+                  (click)="finalizarRecorrido()"
+                  [disabled]="!currentRecorridoId()">
+            <span class="btn-icon">⏹</span>
+            <span class="btn-text">Finalizar</span>
+          </button>
+        </div>
+
+        @if (currentRecorridoId()) {
+          <div class="status-box">
+            <div class="status-indicator live"></div>
+            <div class="status-content">
+              <span class="status-label">En recorrido</span>
+              <span class="status-value">{{ currentRecorridoRutaName() || '—' }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mapa principal -->
+  <section class="map-container">
+    <div id="map" class="map"></div>
+  </section>
+</div>

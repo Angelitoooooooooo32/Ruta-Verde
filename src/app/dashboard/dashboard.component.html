@@ -1,0 +1,166 @@
+<div class="dashboard" [class.dark]="theme() === 'dark'">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="profile">
+        @if (avatar()) {
+          <div class="avatar"><img src="{{ avatar() }}" alt="Avatar" class="avatar-img"/></div>
+        } @else {
+          <div class="avatar">{{ userName().charAt(0).toUpperCase() }}</div>
+        }
+        <div class="profile-info">
+          <div class="name">{{ userName() }}</div>
+          <div class="sub">{{ role() ? (role() | titlecase) : 'Usuario' }}</div>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <a routerLink="/dashboard" class="nav-item active">📊 <span>Dashboard</span></a>
+        <a routerLink="/mapa" class="nav-item">🗺️ <span>Ver mapa</span></a>
+        <a routerLink="/perfil" class="nav-item">⚙️ <span>Configuración</span></a>
+        @if (role() === 'admin') {
+          <a routerLink="/admin" class="nav-item">🛠️ <span>Panel admin</span></a>
+        }
+      </nav>
+
+      <div class="side-quick">
+        <button class="btn-ghost" routerLink="/perfil">Mi perfil</button>
+        <button class="btn-logout small" (click)="logout()">Cerrar Sesion</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title-block">
+          <h2 class="title">{{ greeting() }}, {{ userName() }}!</h2>
+          <p class="subtitle">Panel de control — Estado de recolección</p>
+        </div>
+        <div class="actions">
+            <button class="btn-theme" (click)="toggleTheme()">
+              @if (theme() === 'dark') {
+                <span>🌙</span>
+              } @else {
+                <span>☀️</span>
+              }
+            </button>
+          </div>
+      </header>
+
+      <!-- Circular stats for Admin/overview -->
+      <div class="round-cards">
+        <div class="round-card round-veh">
+          <div class="circle-stat">
+            <span class="circle-value">{{ vehiculosCount() }}</span>
+            <span class="circle-icon">🚛</span>
+          </div>
+          <p class="card-label">Vehículos Activos</p>
+        </div>
+        <div class="round-card round-rut">
+          <div class="circle-stat">
+            <span class="circle-value">{{ rutasCount() }}</span>
+            <span class="circle-icon">🛣️</span>
+          </div>
+          <p class="card-label">Rutas Disponibles</p>
+        </div>
+        <div class="round-card round-drv">
+          <div class="circle-stat">
+            <span class="circle-value">12</span>
+            <span class="circle-icon">👥</span>
+          </div>
+          <p class="card-label">Conductores</p>
+        </div>
+        <div class="round-card round-cit">
+          <div class="circle-stat">
+            <span class="circle-value">48</span>
+            <span class="circle-icon">📦</span>
+          </div>
+          <p class="card-label">Paquetes</p>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <div class="loading-container">
+          <div class="spinner"></div>
+          <p>Cargando datos...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-box">
+          <div class="error-icon">⚠️</div>
+          <div class="error-content">
+            <h4>Error al cargar datos</h4>
+            <p>{{ error() }}</p>
+          </div>
+        </div>
+      } @else {
+        <!-- Cards Grid Section -->
+        <div class="cards-section">
+          <h3 class="section-title">Información rápida</h3>
+          
+          <div class="cards-grid">
+            <!-- Live Map Card -->
+            <a routerLink="/mapa" class="card-item card-live-map">
+              <div class="card-header live-header">
+                <div class="live-badge">
+                  <span class="live-dot"></span>
+                  <span class="live-text">En vivo</span>
+                </div>
+                <div class="card-icon-large">🗺️</div>
+              </div>
+              <div class="card-content">
+                <h4 class="card-item-title">Mapa en vivo</h4>
+                <p class="card-item-text">Ver rutas y vehículos en tiempo real</p>
+                <div class="mini-map-container">
+                  <canvas #miniMap class="mini-map"></canvas>
+                </div>
+                <div class="card-link">Ir al mapa <span class="arrow">→</span></div>
+              </div>
+            </a>
+
+            <!-- Active Vehicles Card -->
+            <div class="card-item card-stat-card">
+              <div class="card-header stat-header">
+                <div class="card-icon-large">🚛</div>
+                <span class="badge-active">Activos</span>
+              </div>
+              <div class="card-content">
+                <h4 class="card-item-title">Vehículos activos</h4>
+                <div class="stat-value">{{ vehiculosCount() }}</div>
+                <p class="card-item-text">En operación ahora</p>
+                <div class="chart-container">
+                  <canvas #vehChart class="sparkline-chart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Available Routes Card -->
+            <div class="card-item card-stat-card">
+              <div class="card-header stat-header">
+                <div class="card-icon-large">🛣️</div>
+                <span class="badge-info">Disponibles</span>
+              </div>
+              <div class="card-content">
+                <h4 class="card-item-title">Rutas disponibles</h4>
+                <div class="stat-value">{{ rutasCount() }}</div>
+                <p class="card-item-text">En la región</p>
+                <div class="chart-container">
+                  <canvas #rutasChart class="sparkline-chart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Card -->
+            <a routerLink="/perfil" class="card-item card-profile">
+              <div class="card-header profile-header">
+                <div class="card-icon-large">👤</div>
+              </div>
+              <div class="card-content">
+                <h4 class="card-item-title">Mi perfil</h4>
+                <p class="card-item-text">Configurar dirección y preferencias</p>
+                <div class="card-link">Ver perfil <span class="arrow">→</span></div>
+              </div>
+            </a>
+          </div>
+        </div>
+      }
+    </main>
+  </div>
+</div>
