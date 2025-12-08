@@ -26,6 +26,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   avatar = signal<string | null>(this.initAvatar());
   rutasCount = signal(0);
   vehiculosCount = signal(0);
+  conductoresCount = signal(0);
   error = signal<string | null>(null);
   role = computed(() => {
     // Esperar a que la autenticación termine de cargar antes de mostrar el rol
@@ -69,12 +70,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     window.addEventListener('keydown', this.onKey);
 
     try {
-      const [rutas, vehiculos] = await Promise.all([
+      const [rutas, vehiculos, conductores] = await Promise.all([
         this.reco.getRutas().catch(() => []),
-        this.reco.getVehiculos().catch(() => [])
+        this.reco.getVehiculos().catch(() => []),
+        this.role() === 'admin' ? this.reco.getConductores().catch(() => []) : Promise.resolve([])
       ]);
       this.rutasCount.set(rutas.length);
       this.vehiculosCount.set(vehiculos.length);
+      this.conductoresCount.set(conductores.length);
       this.rutasData.set(rutas);
       this.vehiculosData.set(vehiculos);
       this.vehTrend.set(this.makeTrend(this.vehiculosCount()));
@@ -88,12 +91,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       // Polling cada 15s
       this.pollId = window.setInterval(async () => {
         try {
-          const [rutas, vehiculos] = await Promise.all([
+          const [rutas, vehiculos, conductores] = await Promise.all([
             this.reco.getRutas().catch(() => []),
-            this.reco.getVehiculos().catch(() => [])
+            this.reco.getVehiculos().catch(() => []),
+            this.role() === 'admin' ? this.reco.getConductores().catch(() => []) : Promise.resolve([])
           ]);
-          const rc = rutas.length; const vc = vehiculos.length;
-          this.rutasCount.set(rc); this.vehiculosCount.set(vc);
+          const rc = rutas.length; const vc = vehiculos.length; const cc = conductores.length;
+          this.rutasCount.set(rc); this.vehiculosCount.set(vc); this.conductoresCount.set(cc);
           this.rutasData.set(rutas); this.vehiculosData.set(vehiculos);
           this.pushTrend(this.vehTrend, vc);
           this.pushTrend(this.rutasTrend, rc);

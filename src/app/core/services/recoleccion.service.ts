@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SupabaseService } from './supabase.service';
 
 type Ruta = {
   id: string;
@@ -27,6 +28,7 @@ type Calle = {
 @Injectable({ providedIn: 'root' })
 export class RecoleccionService {
   private http = inject(HttpClient);
+  private supabase = inject(SupabaseService);
   // En desarrollo (localhost) usamos proxy para evitar CORS; en otros hosts usamos URL absoluta
   private base = ((
     typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
@@ -214,5 +216,24 @@ export class RecoleccionService {
 
   async finalizarRecorrido(recorrido_id: string): Promise<any> {
     return await firstValueFrom(this.http.post(`${this.base}/recorridos/${recorrido_id}/finalizar`, { perfil_id: environment.profileId }));
+  }
+
+  async getConductores(): Promise<any[]> {
+    try {
+      const { data, error } = await this.supabase.client
+        .from('profiles')
+        .select('*')
+        .eq('role', 'conductor');
+      
+      if (error) {
+        console.warn('Error obteniendo conductores :', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.warn('Error obteniendo conductores:', error);
+      return [];
+    }
   }
 }

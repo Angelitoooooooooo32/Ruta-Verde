@@ -29,46 +29,25 @@
     </aside>
 
     <main class="main">
-      <header class="topbar">
-        <div class="title-block">
-          <h2 class="title">{{ greeting() }}, {{ userName() }}!</h2>
-          <p class="subtitle">Panel de control — Estado de recolección</p>
-        </div>
-        <div class="actions">
+      <!-- Hero Header -->
+      <header class="hero-header">
+        <div class="hero-content">
+          <div>
+            <h1 class="hero-title">{{ greeting() }}, {{ userName() }}! 👋</h1>
+            <p class="hero-subtitle">Bienvenido a tu panel de control de recolección sostenible</p>
           </div>
+          <div class="hero-quick-actions">
+            <a routerLink="/mapa" class="quick-btn">
+              <span class="material-symbols-rounded">map</span>
+              <span>Ver Mapa</span>
+            </a>
+            <a routerLink="/perfil" class="quick-btn">
+              <span class="material-symbols-rounded">edit</span>
+              <span>Editar Perfil</span>
+            </a>
+          </div>
+        </div>
       </header>
-
-      <!-- Circular stats for Admin/overview -->
-      <div class="round-cards">
-        <div class="round-card round-veh">
-          <div class="circle-stat">
-            <span class="circle-value">{{ vehiculosCount() }}</span>
-            <span class="material-symbols-rounded circle-icon">local_shipping</span>
-          </div>
-          <p class="card-label">Vehículos Activos</p>
-        </div>
-        <div class="round-card round-rut">
-          <div class="circle-stat">
-            <span class="circle-value">{{ rutasCount() }}</span>
-            <span class="material-symbols-rounded circle-icon">route</span>
-          </div>
-          <p class="card-label">Rutas Disponibles</p>
-        </div>
-        <div class="round-card round-drv">
-          <div class="circle-stat">
-            <span class="circle-value">12</span>
-            <span class="material-symbols-rounded circle-icon">groups</span>
-          </div>
-          <p class="card-label">Conductores</p>
-        </div>
-        <div class="round-card round-cit">
-          <div class="circle-stat">
-            <span class="circle-value">48</span>
-            <span class="material-symbols-rounded circle-icon">package_2</span>
-          </div>
-          <p class="card-label">Entregas Pendientes</p>
-        </div>
-      </div>
 
       @if (loading()) {
         <div class="loading-container">
@@ -77,82 +56,118 @@
         </div>
       } @else if (error()) {
         <div class="error-box">
-          <div class="error-icon">⚠️</div>
+          <span class="material-symbols-rounded error-icon">error</span>
           <div class="error-content">
             <h4>Error al cargar datos</h4>
             <p>{{ error() }}</p>
           </div>
         </div>
       } @else {
-        <!-- Cards Grid Section -->
-        <div class="cards-section">
-          <h3 class="section-title">Información rápida</h3>
-          
-          <div class="cards-grid">
-            <!-- Live Map Card -->
-            <a routerLink="/mapa" class="card-item card-live-map">
-              <div class="card-header live-header">
-                <div class="live-badge">
-                  <span class="live-dot"></span>
-                  <span class="live-text">En vivo</span>
-                </div>
-                <span class="material-symbols-rounded card-icon-large">map</span>
+        <!-- Stats Grid -->
+        <section class="stats-section">
+          <div class="stats-grid">
+            <div class="stat-card stat-vehicles">
+              <div class="stat-header">
+                <span class="material-symbols-rounded stat-icon">local_shipping</span>
+                <span class="stat-badge">Activos</span>
               </div>
-              <div class="card-content">
-                <h4 class="card-item-title">Mapa en vivo</h4>
-                <p class="card-item-text">Ver rutas y vehículos en tiempo real</p>
-                <div class="mini-map-container">
-                  <canvas #miniMap class="mini-map"></canvas>
-                </div>
-                <div class="card-link">Ir al mapa <span class="arrow">→</span></div>
-              </div>
-            </a>
-
-            <!-- Active Vehicles Card -->
-            <div class="card-item card-stat-card">
-              <div class="card-header stat-header">
-                <span class="material-symbols-rounded card-icon-large">local_shipping</span>
-                <span class="badge-active">Activos</span>
-              </div>
-              <div class="card-content">
-                <h4 class="card-item-title">Vehículos activos</h4>
-                <div class="stat-value">{{ vehiculosCount() }}</div>
-                <p class="card-item-text">En operación ahora</p>
-                <div class="chart-container">
+              <div class="stat-body">
+                <div class="stat-number">{{ vehiculosCount() }}</div>
+                <p class="stat-label">Vehículos Activos</p>
+                <div class="stat-chart">
                   <canvas #vehChart class="sparkline-chart"></canvas>
                 </div>
               </div>
             </div>
 
-            <!-- Available Routes Card -->
-            <div class="card-item card-stat-card">
-              <div class="card-header stat-header">
-                <span class="material-symbols-rounded card-icon-large">route</span>
-                <span class="badge-info">Disponibles</span>
+            <div class="stat-card stat-routes">
+              <div class="stat-header">
+                <span class="material-symbols-rounded stat-icon">route</span>
+                <span class="stat-badge">Disponibles</span>
               </div>
-              <div class="card-content">
-                <h4 class="card-item-title">Rutas disponibles</h4>
-                <div class="stat-value">{{ rutasCount() }}</div>
-                <p class="card-item-text">En la región</p>
-                <div class="chart-container">
+              <div class="stat-body">
+                <div class="stat-number">{{ rutasCount() }}</div>
+                <p class="stat-label">Rutas Disponibles</p>
+                <div class="stat-chart">
                   <canvas #rutasChart class="sparkline-chart"></canvas>
                 </div>
               </div>
             </div>
 
-            <!-- Profile Card -->
-            <a routerLink="/perfil" class="card-item card-profile">
-              <div class="card-header profile-header">
-                <span class="material-symbols-rounded card-icon-large">account_circle</span>
+            @if (role() === 'admin') {
+              <div class="stat-card stat-drivers">
+                <div class="stat-header">
+                  <span class="material-symbols-rounded stat-icon">groups</span>
+                  <span class="stat-badge">Total</span>
+                </div>
+                <div class="stat-body">
+                  <div class="stat-number">{{ conductoresCount() }}</div>
+                  <p class="stat-label">Conductores</p>
+                  <p class="stat-description">En la plataforma</p>
+                </div>
               </div>
-              <div class="card-content">
-                <h4 class="card-item-title">Mi perfil</h4>
-                <p class="card-item-text">Configurar dirección y preferencias</p>
-                <div class="card-link">Ver perfil <span class="arrow">→</span></div>
+            }
+          </div>
+        </section>
+
+        <!-- Featured Section -->
+        <section class="featured-section">
+          <h2 class="section-title">Acceso Rápido</h2>
+          
+          <div class="featured-grid">
+            <!-- Live Map - Featured -->
+            <a routerLink="/mapa" class="featured-card featured-map">
+              <div class="featured-overlay">
+                <span class="material-symbols-rounded">location_on</span>
+              </div>
+              <div class="mini-map-container">
+                <canvas #miniMap class="mini-map"></canvas>
+              </div>
+              <div class="featured-content">
+                <h3>Mapa en Vivo</h3>
+                <p>Rastrear rutas y vehículos en tiempo real</p>
+              </div>
+            </a>
+
+            <!-- Quick Stats -->
+            <div class="featured-card featured-info">
+              <div class="featured-header">
+                <span class="material-symbols-rounded">analytics</span>
+                <h3>Estado Operacional</h3>
+              </div>
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-label">Operación</span>
+                  <span class="info-value healthy">En línea</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Próxima recolección</span>
+                  <span class="info-value">Hoy, 14:30</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Puntos de recolección</span>
+                  <span class="info-value">3 cercanos</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Quick Access -->
+            <a routerLink="/perfil" class="featured-card featured-profile">
+              <div class="profile-badge">
+                @if (avatar()) {
+                  <img src="{{ avatar() }}" alt="Avatar" class="profile-avatar" />
+                } @else {
+                  <div class="profile-avatar-placeholder">{{ userName().charAt(0).toUpperCase() }}</div>
+                }
+              </div>
+              <div class="featured-content">
+                <h3>Mi Perfil</h3>
+                <p>Actualizar información y preferencias</p>
+                <div class="featured-link">Configurar <span class="arrow">→</span></div>
               </div>
             </a>
           </div>
-        </div>
+        </section>
       }
     </main>
   </div>
