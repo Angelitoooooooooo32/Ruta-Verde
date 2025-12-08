@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "EcoRutas": {
+    "ruta-verde": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -89,10 +89,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "EcoRutas:build:production"
+              "buildTarget": "ruta-verde:build:production"
             },
             "development": {
-              "buildTarget": "EcoRutas:build:development",
+              "buildTarget": "ruta-verde:build:development",
               "proxyConfig": "proxy.conf.json"
             }
           },

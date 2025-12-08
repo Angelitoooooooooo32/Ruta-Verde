@@ -24,10 +24,10 @@ WORKDIR /app
 RUN npm install -g serve
 
 # Copiar archivos built desde la etapa anterior
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist/ruta-verde ./dist
 
 # Exponer puerto
 EXPOSE 3000
 
 # Comando para iniciar la aplicación
-CMD ["serve", "-s", "dist/ruta-verde", "-l", "3000"]
+CMD ["serve", "-s", ".", "-l", "3000"]
