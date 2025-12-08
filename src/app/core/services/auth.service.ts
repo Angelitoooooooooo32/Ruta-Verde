@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +9,7 @@ export class AuthService {
   private supabaseUrl = 'https://ihwzhhbaupjtoqxxxypx.supabase.co';
   private supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlod3poaGJhdXBqdG9xeHh4eXB4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4MDY0NTMsImV4cCI6MjA4MDM4MjQ1M30.CbHrBIGHHemL1i_VQCpYwdqOfNLFCRg0GshmVggXTHA';
   
+  private router = inject(Router);
   private supabase: SupabaseClient;
   
   // Signals para estado de autenticación
@@ -261,6 +263,9 @@ export class AuthService {
     this.currentUser.set(null);
     this.accessToken.set(null);
     this.profile.set(null);
+    
+    // Navegar al login
+    this.router.navigate(['/auth/login']);
   }
 
   getCurrentUser() {
