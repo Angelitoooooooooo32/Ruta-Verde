@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Script de deploy para Ruta Verde
@@ -10,25 +11,14 @@ echo "=== Iniciando deploy de Ruta Verde ==="
 # Definir variables
 APP_DIR="/home/christian_asprilla/ruta-verde"
 REPO_URL="https://github.com/Angelitoooooooooo32/Ruta-Verde.git"
-CONTAINER_NAME="ruta-verde-app"
-
-# Crear directorio si no existe
-if [ ! -d "$APP_DIR" ]; then
-    echo "Creando directorio de aplicación..."
-    mkdir -p "$APP_DIR"
-fi
+PORT="4200"
 
 # Entrar al directorio
 cd "$APP_DIR"
 
-# Si no existe el repositorio, clonarlo
-if [ ! -d ".git" ]; then
-    echo "Clonando repositorio..."
-    git clone "$REPO_URL" .
-else
-    echo "Actualizando repositorio..."
-    git pull origin main
-fi
+# Actualizar repositorio
+echo "Actualizando repositorio..."
+git pull origin main
 
 # Instalar/actualizar dependencias
 echo "Instalando dependencias..."
@@ -38,31 +28,36 @@ npm ci
 echo "Construyendo aplicación..."
 npm run build
 
-# Si Docker está disponible, usar Docker
-if command -v docker &> /dev/null; then
-    echo "Usando Docker para deploy..."
-    
-    # Detener y remover contenedor anterior
-    docker stop "$CONTAINER_NAME" 2>/dev/null || true
-    docker rm "$CONTAINER_NAME" 2>/dev/null || true
-    
-    # Build y run del contenedor
-    docker-compose up -d
-    
-    echo "Aplicación deployed en Docker"
+# IMPORTANTE: Verificar dónde está realmente la build
+echo "Verificando estructura de build..."
+if [ -f "dist/ruta-verde/index.html" ]; then
+    SERVE_PATH="dist/ruta-verde"
+    echo "✅ Build encontrada en: $SERVE_PATH"
+elif [ -f "dist/browser/index.html" ]; then
+    SERVE_PATH="dist/browser"
+    echo "✅ Build encontrada en: $SERVE_PATH"
+elif [ -f "dist/index.html" ]; then
+    SERVE_PATH="dist"
+    echo "✅ Build encontrada en: $SERVE_PATH"
 else
-    echo "Docker no encontrado, usando serve directamente..."
-    
-    # Instalar serve si no existe
-    npm install -g serve
-    
-    # Matar proceso anterior si existe
-    pkill -f "serve -s dist/ruta-verde" || true
-    
-    # Iniciar la aplicación
-    nohup serve -s dist/ruta-verde -l 3000 > /tmp/ruta-verde.log 2>&1 &
-    
-    echo "Aplicación deployed en puerto 3000"
+    echo "❌ ERROR: No se encontró index.html después del build"
+    find dist/ -name "*.html"
+    exit 1
 fi
 
+# Usar PM2 para manejar el proceso
+echo "Configurando PM2..."
+
+# Detener proceso anterior si existe
+pm2 delete ruta-verde 2>/dev/null || true
+
+# Iniciar con PM2
+pm2 serve "$APP_DIR/$SERVE_PATH" $PORT --spa --name "ruta-verde"
+
+# Configurar para iniciar automáticamente
+pm2 save
+
 echo "=== Deploy completado exitosamente ==="
+echo "🌐 Aplicación disponible en: http://$(hostname -I | awk '{print $1}'):$PORT"
+echo "📊 Ver estado: pm2 status"
+echo "📝 Ver logs: pm2 logs ruta-verde"
