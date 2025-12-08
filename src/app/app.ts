@@ -11,5 +11,5 @@ import { RouterOutlet } from '@angular/router';
   styles: [],
 })
 export class App {
-  protected readonly title = signal('EcoRutas');
+  protected readonly title = signal('Ruta Verde');
 }

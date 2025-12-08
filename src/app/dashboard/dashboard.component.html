@@ -14,17 +14,17 @@
       </div>
 
       <nav class="side-nav">
-        <a routerLink="/dashboard" class="nav-item active">📊 <span>Dashboard</span></a>
-        <a routerLink="/mapa" class="nav-item">🗺️ <span>Ver mapa</span></a>
-        <a routerLink="/perfil" class="nav-item">⚙️ <span>Configuración</span></a>
+        <a routerLink="/dashboard" class="nav-item active"><span class="material-symbols-rounded">dashboard</span> <span>Inicio</span></a>
+        <a routerLink="/mapa" class="nav-item"><span class="material-symbols-rounded">map</span> <span>Mapa en Vivo</span></a>
+        <a routerLink="/perfil" class="nav-item"><span class="material-symbols-rounded">person</span> <span>Mi Perfil</span></a>
         @if (role() === 'admin') {
-          <a routerLink="/admin" class="nav-item">🛠️ <span>Panel admin</span></a>
+          <a routerLink="/admin" class="nav-item"><span class="material-symbols-rounded">admin_panel_settings</span> <span>Administración</span></a>
         }
       </nav>
 
       <div class="side-quick">
-        <button class="btn-ghost" routerLink="/perfil">Mi perfil</button>
-        <button class="btn-logout small" (click)="logout()">Cerrar Sesion</button>
+        <button class="btn-ghost" routerLink="/perfil"><span class="material-symbols-rounded">person_outline</span> Mi Perfil</button>
+        <button class="btn-logout small" (click)="logout()"><span class="material-symbols-rounded">logout</span> Cerrar Sesión</button>
       </div>
     </aside>
 
@@ -35,13 +35,6 @@
           <p class="subtitle">Panel de control — Estado de recolección</p>
         </div>
         <div class="actions">
-            <button class="btn-theme" (click)="toggleTheme()">
-              @if (theme() === 'dark') {
-                <span>🌙</span>
-              } @else {
-                <span>☀️</span>
-              }
-            </button>
           </div>
       </header>
 
@@ -50,30 +43,30 @@
         <div class="round-card round-veh">
           <div class="circle-stat">
             <span class="circle-value">{{ vehiculosCount() }}</span>
-            <span class="circle-icon">🚛</span>
+            <span class="material-symbols-rounded circle-icon">local_shipping</span>
           </div>
           <p class="card-label">Vehículos Activos</p>
         </div>
         <div class="round-card round-rut">
           <div class="circle-stat">
             <span class="circle-value">{{ rutasCount() }}</span>
-            <span class="circle-icon">🛣️</span>
+            <span class="material-symbols-rounded circle-icon">route</span>
           </div>
           <p class="card-label">Rutas Disponibles</p>
         </div>
         <div class="round-card round-drv">
           <div class="circle-stat">
             <span class="circle-value">12</span>
-            <span class="circle-icon">👥</span>
+            <span class="material-symbols-rounded circle-icon">groups</span>
           </div>
           <p class="card-label">Conductores</p>
         </div>
         <div class="round-card round-cit">
           <div class="circle-stat">
             <span class="circle-value">48</span>
-            <span class="circle-icon">📦</span>
+            <span class="material-symbols-rounded circle-icon">package_2</span>
           </div>
-          <p class="card-label">Paquetes</p>
+          <p class="card-label">Entregas Pendientes</p>
         </div>
       </div>
 
@@ -103,7 +96,7 @@
                   <span class="live-dot"></span>
                   <span class="live-text">En vivo</span>
                 </div>
-                <div class="card-icon-large">🗺️</div>
+                <span class="material-symbols-rounded card-icon-large">map</span>
               </div>
               <div class="card-content">
                 <h4 class="card-item-title">Mapa en vivo</h4>
@@ -118,7 +111,7 @@
             <!-- Active Vehicles Card -->
             <div class="card-item card-stat-card">
               <div class="card-header stat-header">
-                <div class="card-icon-large">🚛</div>
+                <span class="material-symbols-rounded card-icon-large">local_shipping</span>
                 <span class="badge-active">Activos</span>
               </div>
               <div class="card-content">
@@ -134,7 +127,7 @@
             <!-- Available Routes Card -->
             <div class="card-item card-stat-card">
               <div class="card-header stat-header">
-                <div class="card-icon-large">🛣️</div>
+                <span class="material-symbols-rounded card-icon-large">route</span>
                 <span class="badge-info">Disponibles</span>
               </div>
               <div class="card-content">
@@ -150,7 +143,7 @@
             <!-- Profile Card -->
             <a routerLink="/perfil" class="card-item card-profile">
               <div class="card-header profile-header">
-                <div class="card-icon-large">👤</div>
+                <span class="material-symbols-rounded card-icon-large">account_circle</span>
               </div>
               <div class="card-content">
                 <h4 class="card-item-title">Mi perfil</h4>

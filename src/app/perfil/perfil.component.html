@@ -3,15 +3,15 @@
   <nav class="top-nav">
     <div class="nav-container">
       <div class="nav-brand">
-        <h1 class="brand-text">EcoRutas</h1>
+        <h1 class="brand-text">Ruta Verde</h1>
       </div>
       <div class="nav-actions">
         <a routerLink="/dashboard" class="nav-btn nav-back" title="Volver al dashboard">
-          <span class="nav-icon">←</span>
-          <span class="nav-text">Dashboard</span>
+          <span class="material-symbols-rounded">arrow_back</span>
+          <span class="nav-text">Atrás</span>
         </a>
         <button class="nav-btn nav-logout" (click)="logout()" title="Cerrar sesión">
-          <span class="nav-icon">⏻</span>
+          <span class="material-symbols-rounded">logout</span>
           <span class="nav-text">Salir</span>
         </button>
       </div>
@@ -45,7 +45,7 @@
         </div>
       </div>
       <label class="btn btn-secondary">
-        <span class="btn-icon">📷</span>
+        <span class="material-symbols-rounded btn-icon">photo_camera</span>
         Cambiar foto
         <input type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
       </label>
@@ -54,7 +54,7 @@
     <!-- Messages -->
     @if (message()) {
       <div class="alert" [class.alert-success]="message()!.type === 'success'" [class.alert-error]="message()!.type === 'error'">
-        <span class="alert-icon">{{ message()!.type === 'success' ? '✓' : '⚠' }}</span>
+        <span class="material-symbols-rounded alert-icon">{{ message()!.type === 'success' ? 'check_circle' : 'error' }}</span>
         <span class="alert-text">{{ message()!.text }}</span>
       </div>
     }
@@ -64,7 +64,7 @@
       <!-- Personal Information Section -->
       <section class="form-section">
         <div class="section-header">
-          <h3 class="section-title">📋 Información Personal</h3>
+          <h3 class="section-title"><span class="material-symbols-rounded">person</span> Información Personal</h3>
         </div>
 
         <div class="form-grid">
@@ -97,7 +97,7 @@
       <!-- Address Section -->
       <section class="form-section">
         <div class="section-header">
-          <h3 class="section-title">📍 Dirección de Recolección</h3>
+          <h3 class="section-title"><span class="material-symbols-rounded">location_on</span> Dirección de Recolección</h3>
         </div>
 
         <div class="form-grid">
@@ -127,7 +127,7 @@
                 <span class="spinner-small"></span>
                 Obteniendo ubicación...
               } @else {
-                📍 Usar mi ubicación actual
+                <span class="material-symbols-rounded">my_location</span> Usar mi ubicación actual
               }
             </button>
           </div>
@@ -137,7 +137,7 @@
       <!-- Notifications Section -->
       <section class="form-section">
         <div class="section-header">
-          <h3 class="section-title">🔔 Notificaciones</h3>
+          <h3 class="section-title"><span class="material-symbols-rounded">notifications</span> Notificaciones</h3>
         </div>
 
         <div class="form-grid">
@@ -160,7 +160,7 @@
             <span class="spinner-small"></span>
             Guardando...
           } @else {
-            ✓ Guardar Cambios
+            <span class="material-symbols-rounded">save</span> Guardar Cambios
           }
         </button>
       </div>
