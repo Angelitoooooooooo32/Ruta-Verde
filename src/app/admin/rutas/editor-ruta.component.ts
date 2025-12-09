@@ -35,6 +35,9 @@ export class EditorRutaComponent implements OnInit, OnDestroy {
   private drawnItems: any;
   private apiCallesLayer: any;
   private leafletLoaded = false;
+  private isDrawing = false;
+  private tempPoints: Array<[number, number]> = [];
+  private tempPolyline: any = null;
   puntos = signal<Array<[number, number]>>([]); // [lat, lng]
 
   async ngOnInit() {
@@ -118,61 +121,116 @@ export class EditorRutaComponent implements OnInit, OnDestroy {
   }
 
   private initMap() {
-    const L: any = (window as any).L;
-    if (!L || !(L as any).Control || !(L as any).Control.Draw) return;
+    const L = (window as any).L;
+    if (!L) return;
+
     const BV_COORDS: [number, number] = [3.882, -77.031];
-    const BV_BOUNDS: [[number, number], [number, number]] = [[3.70, -77.25], [4.05, -76.85]];
+
     this.map = L.map('editor-map', {
       center: BV_COORDS,
-      zoom: 13,
-      minZoom: 11,
-      maxBounds: BV_BOUNDS as any,
-      maxBoundsViscosity: 1.0
+      zoom: 13
     });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(this.map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+
+    // Grupo para puntos
     this.layerGroup = L.layerGroup().addTo(this.map);
-    this.apiCallesLayer = L.layerGroup().addTo(this.map);
     this.drawnItems = new L.FeatureGroup();
     this.map.addLayer(this.drawnItems);
 
-    const drawControl = new (L as any).Control.Draw({
-      draw: {
-        polygon: false,
-        rectangle: false,
-        circle: false,
-        marker: false,
-        circlemarker: false,
-        polyline: { shapeOptions: { color: '#059669', weight: 3 } }
+    // Inicializar estado de dibujo
+    this.isDrawing = false;
+    this.tempPoints = [];
+    this.tempPolyline = null;
+
+    this.map.on('click', (e: any) => {
+      if (!this.isDrawing) return;
+
+      const point: [number, number] = [e.latlng.lat, e.latlng.lng];
+      this.tempPoints.push(point);
+
+      // Dibujar marcador
+      L.circleMarker(point, {
+        radius: 6,
+        fillColor: '#059669',
+        color: '#000',
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8
+      }).addTo(this.layerGroup);
+
+      // Dibujar línea temporal
+      if (this.tempPoints.length > 1) {
+        if (this.tempPolyline) {
+          this.layerGroup.removeLayer(this.tempPolyline);
+        }
+        this.tempPolyline = L.polyline(this.tempPoints, {
+          color: '#059669',
+          weight: 3
+        }).addTo(this.layerGroup);
+      }
+
+      // Actualizar puntos reactivos para habilitar Guardar ruta
+      this.puntos.set([...this.tempPoints]);
+    });
+
+    // Botones para controlar dibujo manual
+    this.createDrawingControls();
+  }
+
+  private createDrawingControls() {
+    // Crear controles personalizados si es necesario
+    const L = (window as any).L;
+    if (!L || !this.map) return;
+
+    const component = this;
+
+    const CustomControl = L.Control.extend({
+      options: {
+        position: 'topleft'
       },
-      edit: { featureGroup: this.drawnItems, remove: true }
-    });
-    this.map.addControl(drawControl);
-    try { this.map.fitBounds(BV_BOUNDS as any, { padding: [24, 24] } as any); } catch {}
 
-    this.map.on((L as any).Draw.Event.CREATED, (e: any) => {
-      this.drawnItems.clearLayers();
-      const layer = e.layer;
-      this.drawnItems.addLayer(layer);
-      const latlngs = layer.getLatLngs().map((p: any) => [Number(p.lat), Number(p.lng)] as [number, number]);
-      this.puntos.set(latlngs);
-      this.draw();
-      this.fitBounds();
-    });
+      onAdd: function (map: any) {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        container.style.backgroundColor = 'white';
+        container.style.padding = '5px';
 
-    this.map.on((L as any).Draw.Event.EDITED, () => {
-      const layers = this.drawnItems.getLayers();
-      if (layers.length) {
-        const layer: any = layers[0];
-        const latlngs = layer.getLatLngs().map((p: any) => [Number(p.lat), Number(p.lng)] as [number, number]);
-        this.puntos.set(latlngs);
-        this.draw();
+        const startBtn = L.DomUtil.create('button', '', container);
+        startBtn.innerHTML = '✏️ Iniciar dibujo';
+        startBtn.style.margin = '2px';
+        startBtn.onclick = () => {
+          // Iniciar modo dibujo
+          component.clearAll();
+          component.isDrawing = true;
+          component.tempPoints = [];
+          if (component.tempPolyline && component.layerGroup) {
+            component.layerGroup.removeLayer(component.tempPolyline);
+          }
+          component.tempPolyline = null;
+          console.log('Iniciar dibujo');
+        };
+
+        const endBtn = L.DomUtil.create('button', '', container);
+        endBtn.innerHTML = '✅ Finalizar';
+        endBtn.style.margin = '2px';
+        endBtn.onclick = () => {
+          // Finalizar modo dibujo y guardar puntos
+          component.isDrawing = false;
+          if (component.tempPoints.length < 2) {
+            component.error.set('La ruta debe tener al menos 2 puntos');
+            return;
+          }
+          component.puntos.set([...component.tempPoints]);
+          component.draw();
+          component.fitBounds();
+          console.log('Finalizar dibujo');
+        };
+
+        return container;
       }
     });
 
-    this.map.on((L as any).Draw.Event.DELETED, () => {
-      this.puntos.set([]);
-      this.draw();
-    });
+    this.map.addControl(new (CustomControl as any)());
   }
 
   private draw() {
