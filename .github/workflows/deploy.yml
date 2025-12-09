@@ -23,84 +23,88 @@ jobs:
       run: npm ci
     
     - name: 🏗️ Build Application
-      run: npm run build
+      run: npm run build -- --configuration=production
+    
+    - name: 📦 Create deployment package
+      run: |
+        # Crear paquete para subir
+        cd dist/ruta-verde/browser
+        tar -czf ../../../deploy.tar.gz ./*
+        cd ../../../
+        echo "📦 Package created: deploy.tar.gz"
+        ls -lh deploy.tar.gz
     
     - name: 🔑 Setup SSH
-      env:
-        SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        SERVER_HOST: ${{ secrets.SERVER_HOST }}
-        SERVER_USER: ${{ secrets.SERVER_USER }}
       run: |
-        # Crear archivo de clave SSH
         mkdir -p ~/.ssh
-        echo "$SSH_KEY" > ~/.ssh/deploy_key
-        chmod 600 ~/.ssh/deploy_key
-        
-        # Agregar host a known_hosts (evita prompt)
-        ssh-keyscan -H "$SERVER_HOST" >> ~/.ssh/known_hosts
-        
-        # Probar conexión
-        echo "🔍 Probando conexión SSH..."
-        ssh -i ~/.ssh/deploy_key -o ConnectTimeout=5 \
-          "$SERVER_USER@$SERVER_HOST" "echo '✅ Conexión SSH exitosa'"
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
     
-    - name: 📤 Upload files to server
-      env:
-        SERVER_HOST: ${{ secrets.SERVER_HOST }}
-        SERVER_USER: ${{ secrets.SERVER_USER }}
-        SERVER_PATH: ${{ secrets.SERVER_PATH }}
+    - name: 📤 Upload package to server
       run: |
-        echo "📤 Subiendo archivos a $SERVER_USER@$SERVER_HOST:$SERVER_PATH"
+        scp -i ~/.ssh/id_ed25519 \
+          deploy.tar.gz \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/deploy.tar.gz
         
-        # Subir TODOS los archivos de la build
-        scp -r -i ~/.ssh/deploy_key -o ConnectTimeout=30 \
-          dist/ruta-verde/browser/* \
-          "$SERVER_USER@$SERVER_HOST:$SERVER_PATH/dist/"
-        
-        echo "✅ Archivos subidos"
+        echo "✅ Package uploaded to server"
     
-    - name: ⚙️ Configure server
-      env:
-        SERVER_HOST: ${{ secrets.SERVER_HOST }}
-        SERVER_USER: ${{ secrets.SERVER_USER }}
-        SERVER_PATH: ${{ secrets.SERVER_PATH }}
-      run: |
-        echo "⚙️ Configurando servidor..."
-        
-        ssh -i ~/.ssh/deploy_key \
-          "$SERVER_USER@$SERVER_HOST" "
+    - name: 🚀 Execute deployment on server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
           set -e
+          echo "🚀 Iniciando despliegue..."
           
-          echo '1. Configurando permisos...'
-          sudo chown -R www-data:www-data '$SERVER_PATH/dist'
-          sudo chmod -R 755 '$SERVER_PATH/dist'
+          DEPLOY_PATH="${{ secrets.SERVER_PATH }}"
           
-          echo '2. Reiniciando Apache...'
+          cd "$DEPLOY_PATH"
+          
+          # 1. Backup actual
+          if [ -d "dist" ]; then
+            backup_dir="backup-$(date +%Y%m%d-%H%M%S)"
+            mkdir -p "$backup_dir"
+            cp -r dist "$backup_dir/"
+            echo "✅ Backup creado: $backup_dir"
+          fi
+          
+          # 2. Limpiar directorio actual
+          rm -rf dist
+          mkdir -p dist
+          
+          # 3. Extraer nuevo paquete
+          echo "📦 Extrayendo nueva versión..."
+          tar -xzf /tmp/deploy.tar.gz -C dist/
+          
+          # 4. Configurar permisos
+          echo "🔐 Configurando permisos..."
+          sudo chown -R www-data:www-data dist
+          sudo chmod -R 755 dist
+          
+          # 5. Limpiar archivo temporal
+          rm -f /tmp/deploy.tar.gz
+          
+          # 6. Reiniciar Apache
+          echo "🌐 Reiniciando Apache..."
           sudo systemctl restart apache2
           
-          echo '3. Verificando Apache...'
-          sudo systemctl status apache2 --no-pager
-          
-          echo '✅ Configuración completada'
-          echo '🌐 Tu app está en: http://${{ secrets.DOMAIN }}'
-        "
+          echo "✅ ¡Despliegue completado!"
+          echo "🌐 Disponible en: http://${{ secrets.DOMAIN }}"
     
     - name: ✅ Verify deployment
-      env:
-        DOMAIN: ${{ secrets.DOMAIN }}
       run: |
-        echo "🔍 Verificando despliegue en $DOMAIN..."
-        sleep 10  # Dar tiempo a Apache
+        echo "⏳ Esperando que Apache reinicie..."
+        sleep 8
+        echo "🔍 Verificando sitio..."
         
-        # Intentar acceder varias veces
-        for i in {1..5}; do
-          echo "Intento $i..."
-          if curl -f -s -o /dev/null -w "%{http_code}" "http://$DOMAIN" | grep -q "200\|304"; then
-            echo "✅ ¡Sitio funcionando!"
-            exit 0
-          fi
-          sleep 3
-        done
-        
-        echo "⚠️  No se pudo verificar el sitio"
-        echo "💡 Verifica manualmente: http://$DOMAIN"
+        # Intentar acceder al sitio
+        if curl -f -s -o /dev/null -w "HTTP: %{http_code}\n" "http://${{ secrets.DOMAIN }}"; then
+          echo "✅ ¡Sitio funcionando correctamente!"
+        else
+          echo "⚠️  El sitio podría estar iniciando..."
+          echo "💡 Revisa los logs en el servidor: sudo tail -f /var/log/apache2/error.log"
+        fi
