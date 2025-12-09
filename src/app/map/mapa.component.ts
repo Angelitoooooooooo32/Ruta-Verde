@@ -138,10 +138,8 @@ export class MapaComponent implements OnInit, OnDestroy {
 
   private async loadRutas() {
     try {
-      const [apiRutas, supa] = await Promise.all([
-        this.reco.getRutas(),
-        this.admin.listRutas().catch(() => [])
-      ]);
+      // Opción B: usar solo rutas de la API (RecoleccionService.getRutas)
+      const apiRutas = await this.reco.getRutas();
 
       const apiMapped = (apiRutas || []).map(r => ({
         id: String(r.id || ''),
@@ -150,38 +148,7 @@ export class MapaComponent implements OnInit, OnDestroy {
         source: 'api' as const
       })).filter(r => !!r.id);
 
-      const supaMapped = (supa as any[] || []).map((r: any) => ({
-        id: String(r.id || ''),
-        nombre: String(r.nombre || 'Ruta'),
-        coordenadas: r.coordenadas || (r.geometria?.type === 'LineString' && Array.isArray(r.geometria.coordinates)
-          ? r.geometria.coordinates.map((c: any) => [Number(c[1]), Number(c[0])])
-          : undefined),
-        source: 'supa' as const,
-        ext_id: r.ext_id || null
-      })).filter(r => !!r.id);
-
-      const byName = new Map<string, { id: string; nombre: string; coordenadas?: Array<[number, number]>; source?: 'api' | 'supa'; ext_id?: string | null }>();
-      for (const r of apiMapped) byName.set(r.nombre.toLowerCase(), r);
-      for (const r of supaMapped) {
-        const key = r.nombre.toLowerCase();
-        if (!byName.has(key)) byName.set(key, r);
-      }
-
-      this.rutas.set(Array.from(byName.values()));
-
-      // Sincronizar: asegurar respaldo en Supabase de rutas que existen en la API pero no en Supabase
-      const supaNames = new Set(supaMapped.map(r => r.nombre.toLowerCase()));
-      const missingInSupa = apiMapped.filter(r => !supaNames.has(r.nombre.toLowerCase()) && r.coordenadas && r.coordenadas.length > 1);
-      if (missingInSupa.length) {
-        const toCreate = missingInSupa.map(r => ({
-          nombre: r.nombre,
-          geometria: { type: 'LineString', coordinates: r.coordenadas!.map(p => [p[1], p[0]]) },
-          coordenadas: r.coordenadas
-        }));
-        try {
-          await Promise.allSettled(toCreate.map(body => this.admin.createRuta(body as any)));
-        } catch { }
-      }
+      this.rutas.set(apiMapped);
     } catch (e: any) {
       this.error.set(e?.message || 'No se pudieron cargar las rutas');
     }
