@@ -22,7 +22,7 @@ jobs:
     - name: 📦 Install Dependencies
       run: npm ci
     
-    - name: 🏗️ Build Application
+    - name:  Build Application
       run: npm run build -- --configuration=production
     
     - name: 🔑 Setup SSH Keys
