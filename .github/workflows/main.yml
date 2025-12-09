@@ -1,0 +1,71 @@
+name: Deploy LimpiavenTura
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Instalar dependencias
+      run: npm ci
+      
+    - name: Construir aplicación
+      run: npm run build
+      
+    - name: Configurar SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+        
+    - name: Desplegar al servidor
+      run: |
+        # Crear estructura en servidor
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          mkdir -p ${{ secrets.SERVER_PATH }}/tmp-deploy
+        "
+        
+        # Copiar archivos construidos
+        scp -i ~/.ssh/id_ed25519 -r dist/* ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/tmp-deploy/
+        
+        # Reemplazar producción
+        ssh -i ~/.ssh/id_ed25519 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          # Respaldar actual
+          if [ -d '${{ secrets.SERVER_PATH }}/dist-backup' ]; then
+            rm -rf '${{ secrets.SERVER_PATH }}/dist-backup'
+          fi
+          
+          if [ -d '${{ secrets.SERVER_PATH }}/dist' ]; then
+            mv '${{ secrets.SERVER_PATH }}/dist' '${{ secrets.SERVER_PATH }}/dist-backup'
+          fi
+          
+          # Mover nuevo
+          mv '${{ secrets.SERVER_PATH }}/tmp-deploy' '${{ secrets.SERVER_PATH }}/dist'
+          
+          # Limpiar
+          rm -rf '${{ secrets.SERVER_PATH }}/tmp-deploy'
+          
+          # Dar permisos
+          chmod -R 755 '${{ secrets.SERVER_PATH }}/dist'
+          
+          # Reiniciar Apache
+          sudo systemctl restart apache2
+          
+          echo '✅ Despliegue completado'
+          echo '🌐 Disponible en: http://${{ secrets.DOMAIN }}'
+        "
