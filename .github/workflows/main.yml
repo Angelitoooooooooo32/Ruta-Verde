@@ -21,6 +21,7 @@ jobs:
       run: |
         npm ci
         npm run build
+        echo "✅ Build completado en dist/ruta-verde/browser/"
     
     - name: 🔑 Setup SSH Key
       run: |
@@ -31,18 +32,25 @@ jobs:
     
     - name: 📤 Deploy files
       run: |
+        echo "🚀 Subiendo archivos a /var/www/christian_site/"
         scp -r -i ~/.ssh/key \
           -o StrictHostKeyChecking=no \
           dist/ruta-verde/browser/* \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/dist/
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/christian_site/
     
     - name: ⚙️ Configure server
       run: |
         ssh -i ~/.ssh/key \
           -o StrictHostKeyChecking=no \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-          sudo chown -R www-data:www-data ${{ secrets.SERVER_PATH }}/dist
-          sudo chmod -R 755 ${{ secrets.SERVER_PATH }}/dist
+          echo '🔐 Configurando permisos...'
+          sudo chown -R www-data:www-data /var/www/christian_site
+          sudo chmod -R 755 /var/www/christian_site
+          
+          echo '🔄 Reiniciando Apache...'
           sudo systemctl restart apache2
-          echo '✅ Deployed to http://${{ secrets.DOMAIN }}'
+          
+          echo '✅ Desplegado en http://${{ secrets.DOMAIN }}'
+          echo '📁 Archivos en /var/www/christian_site/:'
+          ls -la /var/www/christian_site/ | head -10
         "
