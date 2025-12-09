@@ -29,20 +29,45 @@ jobs:
         chmod 600 ~/.ssh/key
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
     
+    - name: 🗑️ Clean server directory
+      run: |
+        ssh -i ~/.ssh/key \
+          -o StrictHostKeyChecking=no \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+          # Limpiar directorio (excluyendo posibles configuraciones importantes)
+          if [ -d '${{ secrets.SERVER_PATH }}' ]; then
+            find '${{ secrets.SERVER_PATH }}' -mindepth 1 -delete
+          fi
+        "
+    
     - name: 📤 Deploy files
       run: |
-        scp -r -i ~/.ssh/key \
-          -o StrictHostKeyChecking=no \
-          dist/ruta-verde/browser/* \
-          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/dist/
+        # Copiar TODO el contenido, incluyendo archivos ocultos
+        rsync -avz -e "ssh -i ~/.ssh/key -o StrictHostKeyChecking=no" \
+          --delete \
+          dist/ruta-verde/browser/ \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/
     
     - name: ⚙️ Configure server
       run: |
         ssh -i ~/.ssh/key \
           -o StrictHostKeyChecking=no \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-          sudo chown -R www-data:www-data ${{ secrets.SERVER_PATH }}/dist
-          sudo chmod -R 755 ${{ secrets.SERVER_PATH }}/dist
+          # Establecer permisos correctos
+          sudo chown -R www-data:www-data '${{ secrets.SERVER_PATH }}'
+          sudo chmod -R 755 '${{ secrets.SERVER_PATH }}'
+          
+          # Verificar que index.html existe
+          if [ -f '${{ secrets.SERVER_PATH }}/index.html' ]; then
+            echo '✅ Archivos desplegados correctamente'
+            ls -la '${{ secrets.SERVER_PATH }}' | head -10
+          else
+            echo '❌ ERROR: index.html no encontrado'
+            exit 1
+          fi
+          
+          # Reiniciar Apache
           sudo systemctl restart apache2
-          echo '✅ Deployed to http://${{ secrets.DOMAIN }}'
+          echo '🚀 Apache reiniciado'
+          echo '✅ Aplicación desplegada en http://${{ secrets.DOMAIN }}'
         "
