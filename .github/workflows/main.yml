@@ -2,7 +2,7 @@ name: 🚀 Deploy LimpiavenTura
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   deploy:
@@ -17,42 +17,28 @@ jobs:
       with:
         node-version: '20'
     
-    - run: npm ci && npm run build
+    - name: 📦 Install & Build
+      run: |
+        npm ci
+        npm run build
     
-    - name: 🔑 Setup SSH Key PROPERLY
+    - name: 🔑 Setup SSH Key
       run: |
         mkdir -p ~/.ssh
-        # Crear clave en formato PEM explícito
-        cat > ~/.ssh/deploy_key << 'EOF'
-${{ secrets.SSH_PRIVATE_KEY }}
-EOF
-        chmod 600 ~/.ssh/deploy_key
-        
-        # Verificar formato
-        echo "🔍 Verificando clave..."
-        if file ~/.ssh/deploy_key | grep -q "PEM"; then
-          echo "✅ Formato PEM correcto"
-        elif file ~/.ssh/deploy_key | grep -q "OpenSSH"; then
-          echo "✅ Formato OpenSSH correcto"
-        else
-          echo "❌ Formato desconocido"
-          file ~/.ssh/deploy_key
-          exit 1
-        fi
-        
-        # Agregar host
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/key
+        chmod 600 ~/.ssh/key
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
     
-    - name: 📤 Deploy with SCP
+    - name: 📤 Deploy files
       run: |
-        scp -r -i ~/.ssh/deploy_key \
+        scp -r -i ~/.ssh/key \
           -o StrictHostKeyChecking=no \
           dist/ruta-verde/browser/* \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/dist/
     
-    - name: ⚙️ Configure
+    - name: ⚙️ Configure server
       run: |
-        ssh -i ~/.ssh/deploy_key \
+        ssh -i ~/.ssh/key \
           -o StrictHostKeyChecking=no \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
           sudo chown -R www-data:www-data ${{ secrets.SERVER_PATH }}/dist
