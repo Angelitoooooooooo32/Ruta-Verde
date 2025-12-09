@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
@@ -16,7 +16,7 @@ jobs:
     - name: 🟢 Setup Node.js 20
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'  # CAMBIADO de 18 a 20
+        node-version: '20.x'
         cache: 'npm'
     
     - name: 📦 Install Dependencies
@@ -25,75 +25,41 @@ jobs:
     - name: 🏗️ Build Application
       run: npm run build -- --configuration=production
     
-    - name: 🔑 Setup SSH
+    - name: 🔑 Setup SSH Keys
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
     
-    - name: 📤 Deploy to Server
-      run: |
-        # Variables
-        SERVER="${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}"
-        PATH_ON_SERVER="${{ secrets.SERVER_PATH }}"
-        
-        echo "🚀 Desplegando a: $SERVER"
-        
-        # Crear archivo temporal
-        tar -czf deploy.tar.gz -C dist .
-        
-        # Subir al servidor
-        scp -i ~/.ssh/id_ed25519 deploy.tar.gz $SERVER:/tmp/deploy.tar.gz
-        
-        # Ejecutar en servidor
-        ssh -i ~/.ssh/id_ed25519 $SERVER "
+    - name: 📤 Deploy with SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
           set -e
+          echo "🚀 Iniciando despliegue..."
           
-          echo '📂 Preparando despliegue...'
-          cd '$PATH_ON_SERVER'
+          # Variables
+          DEPLOY_PATH="${{ secrets.SERVER_PATH }}"
+          
+          cd "$DEPLOY_PATH"
           
           # 1. Backup actual
-          if [ -d 'dist' ]; then
-            backup_dir=\"backup-\$(date +%Y%m%d-%H%M%S)\"
-            mkdir -p \"\$backup_dir\"
-            cp -r dist \"\$backup_dir/\"
-            echo '✅ Backup creado'
+          if [ -d "dist" ]; then
+            backup_dir="backup-$(date +%Y%m%d-%H%M%S)"
+            mkdir -p "$backup_dir"
+            cp -r dist "$backup_dir/"
+            echo "✅ Backup creado: $backup_dir"
           fi
           
-          # 2. Extraer nuevos archivos
-          echo '📦 Extrayendo nueva versión...'
-          tar -xzf /tmp/deploy.tar.gz -C .
+          # 2. Limpiar dist actual
+          rm -rf dist
           
-          # 3. Instalar dependencias en servidor (opcional)
-          echo '📦 Actualizando dependencias...'
-          npm ci --only=production
+          echo "📦 Preparando directorio..."
+          mkdir -p dist
           
-          # 4. Permisos
-          echo '🔐 Configurando permisos...'
-          chmod -R 755 dist
-          sudo chown -R www-data:www-data dist
-          
-          # 5. Reiniciar Apache
-          echo '🌐 Reiniciando Apache...'
-          sudo systemctl restart apache2
-          
-          # 6. Limpiar
-          rm -f /tmp/deploy.tar.gz
-          
-          echo '✅ ¡Despliegue completado!'
-          echo '🌐 Disponible en: http://${{ secrets.DOMAIN }}'
-        "
-        
-        # Limpiar local
-        rm -f deploy.tar.gz
-        
-    - name: ✅ Verify Deployment
-      run: |
-        echo "Esperando que Apache inicie..."
-        sleep 8
-        if curl -f -s -o /dev/null -w "%{http_code}" http://${{ secrets.DOMAIN }} | grep -q "200"; then
-          echo "✅ Sitio funcionando correctamente"
-        else
-          echo "⚠️  Sitio podría estar iniciando..."
-        fi
+          # El script continúa en el servidor...
