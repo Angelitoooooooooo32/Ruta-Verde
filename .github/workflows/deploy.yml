@@ -3,57 +3,58 @@ name: 🚀 Deploy LimpiavenTura
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: 📥 Checkout código
-      uses: actions/checkout@v4
+    - name: 📥 Checkout
+      uses: actions/checkout@v3
     
-    - name: 🟢 Setup Node.js 20
-      uses: actions/setup-node@v4
+    - name: 🟢 Setup Node
+      uses: actions/setup-node@v3
       with:
-        node-version: '20.x'
-        cache: 'npm'
+        node-version: '20'
     
-    - name: 📦 Install Dependencies
-      run: npm ci
+    - run: npm ci && npm run build
     
-    - name: 🏗️ Build Application
-      run: npm run build
-    
-    - name: 🔑 Setup SSH Key CORRECTLY
+    - name: 🔑 Setup RSA SSH Key
       run: |
-        # Crear clave SSH CORRECTAMENTE
         mkdir -p ~/.ssh
-        # Usar formato PEM para evitar error libcrypto
-        echo "-----BEGIN OPENSSH PRIVATE KEY-----" > ~/.ssh/deploy_key
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" | grep -v "BEGIN" | grep -v "END" >> ~/.ssh/deploy_key
-        echo "-----END OPENSSH PRIVATE KEY-----" >> ~/.ssh/deploy_key
+        
+        # Crear archivo con formato RSA CORRECTO
+        cat > ~/.ssh/deploy_key << 'EOF'
+${{ secrets.SSH_PRIVATE_KEY }}
+EOF
+        
         chmod 600 ~/.ssh/deploy_key
+        
+        # Verificar que es RSA
+        echo "🔍 Verificando clave RSA..."
+        if head -1 ~/.ssh/deploy_key | grep -q "BEGIN RSA PRIVATE KEY"; then
+          echo "✅ Formato RSA correcto"
+        else
+          echo "❌ No es formato RSA"
+          exit 1
+        fi
         
         # Agregar host
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
         
-        # Verificar clave
-        echo "🔍 Verificando clave SSH..."
-        if ssh-keygen -l -f ~/.ssh/deploy_key >/dev/null 2>&1; then
-          echo "✅ Clave SSH válida"
-        else
-          echo "❌ Clave SSH inválida"
-          exit 1
-        fi
+        # Probar conexión
+        echo "🔗 Probando conexión..."
+        ssh -i ~/.ssh/deploy_key \
+          -o StrictHostKeyChecking=no \
+          -o ConnectTimeout=10 \
+          ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+          "echo '✅ SSH funciona con clave RSA'"
     
-    - name: 📤 Sync files with rsync
+    - name: 📤 Deploy files
       run: |
-        # Sincronizar archivos directamente
-        rsync -avz \
-          -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-          --delete \
-          dist/ruta-verde/browser/ \
+        scp -r -i ~/.ssh/deploy_key \
+          -o StrictHostKeyChecking=no \
+          dist/ruta-verde/browser/* \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/dist/
     
     - name: ⚙️ Configure server
@@ -61,34 +62,20 @@ jobs:
         ssh -i ~/.ssh/deploy_key \
           -o StrictHostKeyChecking=no \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-          set -e
-          
-          echo '🔧 Configurando servidor...'
-          
-          # Permisos
           sudo chown -R www-data:www-data ${{ secrets.SERVER_PATH }}/dist
           sudo chmod -R 755 ${{ secrets.SERVER_PATH }}/dist
-          
-          # Apache
-          echo '🌐 Reiniciando Apache...'
           sudo systemctl restart apache2
-          
-          # Verificar
-          echo '✅ ¡Despliegue completado!'
-          echo '🌐 Disponible en: http://${{ secrets.DOMAIN }}'
+          echo '✅ ¡Despliegue exitoso!'
+          echo '🌐 http://${{ secrets.DOMAIN }}'
         "
     
     - name: ✅ Verify
       run: |
-        echo "⏳ Esperando 5 segundos..."
         sleep 5
+        echo "🔍 Verificando sitio..."
         
-        echo "🔍 Probando sitio..."
-        STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.DOMAIN }} || echo "000")
-        
-        if [ "$STATUS" = "200" ] || [ "$STATUS" = "304" ]; then
-          echo "✅ Sitio funcionando (HTTP $STATUS)"
+        if curl -s -f -o /dev/null -w "%{http_code}\n" "http://${{ secrets.DOMAIN }}" | grep -q "200\|304"; then
+          echo "✅ Sitio funcionando"
         else
-          echo "⚠️  Sitio devolvió HTTP $STATUS"
-          echo "📋 Verifica manualmente: http://${{ secrets.DOMAIN }}"
+          echo "⚠️  Verifica manualmente: http://${{ secrets.DOMAIN }}"
         fi
