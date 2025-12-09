@@ -3,6 +3,7 @@ name: 🚀 Deploy LimpiavenTura
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -24,51 +25,70 @@ jobs:
     - name: 🏗️ Build Application
       run: npm run build
     
-    - name: 🔑 Setup SSH Key
+    - name: 🔑 Setup SSH Key CORRECTLY
       run: |
+        # Crear clave SSH CORRECTAMENTE
         mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+        # Usar formato PEM para evitar error libcrypto
+        echo "-----BEGIN OPENSSH PRIVATE KEY-----" > ~/.ssh/deploy_key
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" | grep -v "BEGIN" | grep -v "END" >> ~/.ssh/deploy_key
+        echo "-----END OPENSSH PRIVATE KEY-----" >> ~/.ssh/deploy_key
         chmod 600 ~/.ssh/deploy_key
+        
+        # Agregar host
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+        
+        # Verificar clave
+        echo "🔍 Verificando clave SSH..."
+        if ssh-keygen -l -f ~/.ssh/deploy_key >/dev/null 2>&1; then
+          echo "✅ Clave SSH válida"
+        else
+          echo "❌ Clave SSH inválida"
+          exit 1
+        fi
     
-    - name: 📤 Sync files
+    - name: 📤 Sync files with rsync
       run: |
-        # Sincronizar archivos - YA con permisos correctos
+        # Sincronizar archivos directamente
         rsync -avz \
           -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-          --chown=www-data:www-data \
-          --chmod=755 \
+          --delete \
           dist/ruta-verde/browser/ \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}/dist/
     
-    - name: ⚙️ Configure Apache (sin sudo)
+    - name: ⚙️ Configure server
       run: |
-        # En lugar de sudo, usamos otros métodos
         ssh -i ~/.ssh/deploy_key \
           -o StrictHostKeyChecking=no \
           ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
           set -e
           
-          echo '🔄 Reiniciando Apache...'
+          echo '🔧 Configurando servidor...'
           
-          # Método 1: Usar systemctl sin sudo (si está permitido)
-          systemctl --user restart apache2 2>/dev/null || \
+          # Permisos
+          sudo chown -R www-data:www-data ${{ secrets.SERVER_PATH }}/dist
+          sudo chmod -R 755 ${{ secrets.SERVER_PATH }}/dist
           
-          # Método 2: Usar apache2ctl directamente
-          apache2ctl restart 2>/dev/null || \
+          # Apache
+          echo '🌐 Reiniciando Apache...'
+          sudo systemctl restart apache2
           
-          # Método 3: Enviar señal HUP al proceso Apache
-          echo '⚠️  No se pudo reiniciar Apache normalmente'
-          echo '💡 Intento alternativo...'
-          APACHE_PID=\$(cat /var/run/apache2/apache2.pid 2>/dev/null || echo '')
-          if [ -n \"\$APACHE_PID\" ]; then
-            kill -HUP \$APACHE_PID
-            echo '✅ Apache recargado (señal HUP)'
-          else
-            echo '⚠️  No se encontró PID de Apache'
-            echo '💡 La aplicación se desplegó pero Apache necesita reinicio manual'
-          fi
-          
-          echo '✅ Archivos desplegados'
+          # Verificar
+          echo '✅ ¡Despliegue completado!'
           echo '🌐 Disponible en: http://${{ secrets.DOMAIN }}'
         "
+    
+    - name: ✅ Verify
+      run: |
+        echo "⏳ Esperando 5 segundos..."
+        sleep 5
+        
+        echo "🔍 Probando sitio..."
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.DOMAIN }} || echo "000")
+        
+        if [ "$STATUS" = "200" ] || [ "$STATUS" = "304" ]; then
+          echo "✅ Sitio funcionando (HTTP $STATUS)"
+        else
+          echo "⚠️  Sitio devolvió HTTP $STATUS"
+          echo "📋 Verifica manualmente: http://${{ secrets.DOMAIN }}"
+        fi
